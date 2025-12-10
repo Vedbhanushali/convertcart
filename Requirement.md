@@ -51,13 +51,13 @@ GET /search/dishes?name=biryani&minPrice=150&maxPrice=300
 
 ### Stack
 - **Backend:** Node.js
-- **Database:** MySQL
+- **Database:** Postgre
 - **Code Quality:** Clean and well-structured code
 
 ### Deliverables
 
 1. **Codebase**
-   - Clean and well-structured Node.js + MySQL backend code
+   - Clean and well-structured Node.js + Postgres backend code
    - Proper error handling and validation
    - Well-organized project structure
 
