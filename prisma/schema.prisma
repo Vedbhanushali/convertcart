@@ -50,4 +50,3 @@ model Order {
   @@index([menuItemId], map: "idx_orders_menu_item_id")
   @@map("orders")
 }
-
