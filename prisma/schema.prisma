@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  city      String    @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  menuItems MenuItem[]
+  orders    Order[]
+
+  @@map("restaurants")
+}
+
+model MenuItem {
+  id           Int       @id @default(autoincrement())
+  restaurantId Int      @map("restaurant_id")
+  name         String   @db.VarChar(255)
+  price        Decimal   @db.Decimal(10, 2)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@index([restaurantId], map: "idx_menu_items_restaurant_id")
+  @@index([name], map: "idx_menu_items_name")
+  @@index([price], map: "idx_menu_items_price")
+  @@map("menu_items")
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  restaurantId Int      @map("restaurant_id")
+  menuItemId  Int      @map("menu_item_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItem    MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId], map: "idx_orders_restaurant_id")
+  @@index([menuItemId], map: "idx_orders_menu_item_id")
+  @@map("orders")
+}
+

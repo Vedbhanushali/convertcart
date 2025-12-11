@@ -14,6 +14,7 @@ A Node.js + PostgreSQL backend service that allows users to search for restauran
 - **Runtime:** Node.js
 - **Framework:** Express.js
 - **Database:** PostgreSQL
+- **ORM:** Prisma
 - **Environment:** dotenv
 
 ## Prerequisites
@@ -110,18 +111,39 @@ postgresql://username:password@host:port/database?sslmode=require
 
 **Important:** Copy your connection string exactly as provided by your database provider. The pg library will handle URL encoding automatically.
 
-### 5. Seed the Database
+### 5. Set Up Prisma
 
-Run the seed script to create tables and populate sample data:
+1. Generate Prisma Client:
+```bash
+npm run prisma:generate
+```
+
+2. Push the database schema to your database:
+```bash
+npm run prisma:push
+```
+
+This will create all the tables, indexes, and relationships defined in `prisma/schema.prisma`.
+
+**Alternative:** You can use Prisma migrations instead:
+```bash
+npm run prisma:migrate
+```
+
+### 6. Seed the Database
+
+Run the seed script to populate sample data:
 
 ```bash
 npm run seed
 ```
 
 This will:
-- Create the database schema (restaurants, menu_items, orders tables)
+- Clear any existing data
 - Insert sample restaurants, menu items, and orders
 - Display confirmation messages
+
+**Note:** The database schema must be created first (step 5) before running the seed script.
 
 ## Running the Application
 
@@ -279,39 +301,49 @@ searchDishes('biryani', 150, 300);
 
 ## Database Schema
 
-### Tables
+The database schema is defined in `prisma/schema.prisma` using Prisma. The schema includes:
 
-#### `restaurants`
-- `id` (SERIAL, PRIMARY KEY)
-- `name` (VARCHAR(255))
-- `city` (VARCHAR(100))
-- `created_at` (TIMESTAMP)
-- `updated_at` (TIMESTAMP)
+### Models
 
-#### `menu_items`
-- `id` (SERIAL, PRIMARY KEY)
-- `restaurant_id` (INTEGER, FOREIGN KEY)
-- `name` (VARCHAR(255))
-- `price` (DECIMAL(10, 2))
-- `created_at` (TIMESTAMP)
-- `updated_at` (TIMESTAMP)
+#### `Restaurant`
+- `id` (Int, auto-increment, primary key)
+- `name` (String)
+- `city` (String)
+- `createdAt` (DateTime, auto-generated)
+- `updatedAt` (DateTime, auto-updated)
+- Relations: `menuItems`, `orders`
 
-#### `orders`
-- `id` (SERIAL, PRIMARY KEY)
-- `restaurant_id` (INTEGER, FOREIGN KEY)
-- `menu_item_id` (INTEGER, FOREIGN KEY)
-- `created_at` (TIMESTAMP)
+#### `MenuItem`
+- `id` (Int, auto-increment, primary key)
+- `restaurantId` (Int, foreign key to Restaurant)
+- `name` (String)
+- `price` (Decimal)
+- `createdAt` (DateTime, auto-generated)
+- `updatedAt` (DateTime, auto-updated)
+- Relations: `restaurant`, `orders`
+- Indexes: `restaurantId`, `name`, `price`
+
+#### `Order`
+- `id` (Int, auto-increment, primary key)
+- `restaurantId` (Int, foreign key to Restaurant)
+- `menuItemId` (Int, foreign key to MenuItem)
+- `createdAt` (DateTime, auto-generated)
+- Relations: `restaurant`, `menuItem`
+- Indexes: `restaurantId`, `menuItemId`
+
+**Note:** The schema uses Prisma's type-safe models. Run `npm run prisma:generate` after modifying the schema to update the Prisma Client.
 
 ## Project Structure
 
 ```
 ConvertCart/
+├── prisma/
+│   └── schema.prisma              # Prisma schema (database models)
 ├── src/
 │   ├── controllers/
 │   │   └── searchController.js    # Search logic
 │   ├── database/
-│   │   ├── connection.js          # PostgreSQL connection pool
-│   │   ├── schema.sql             # Database schema
+│   │   ├── connection.js          # Prisma Client connection
 │   │   └── seed.js                # Seed script
 │   ├── routes/
 │   │   └── searchRoutes.js        # API routes
@@ -328,6 +360,10 @@ ConvertCart/
 - `npm start` - Start the server in production mode
 - `npm run dev` - Start the server in development mode with nodemon
 - `npm run seed` - Seed the database with sample data
+- `npm run prisma:generate` - Generate Prisma Client
+- `npm run prisma:migrate` - Run Prisma migrations (creates migration files)
+- `npm run prisma:push` - Push schema changes to database without migrations
+- `npm run prisma:studio` - Open Prisma Studio (database GUI)
 
 ## Deployment
 
